@@ -1,16 +1,124 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Element } from 'react-scroll';
-import { GoogleMap, LoadScript } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import Geocode from 'react-geocode';
 
+export default function LandingPage({ 
+    onLoad, 
+    onUnmount, 
+    containerStyle, 
+    address = "", 
+    setAddress, 
+    maxResults = 0, 
+    setMaxResults, 
+    minLength = 0, 
+    setMinLength, 
+    minStars = 0, 
+    setMinStars, 
+    maxDistance = 30, 
+    setMaxDistance, 
+    lat = 0, 
+    setLat, 
+    lng = 0, 
+    setLng, 
+    data = {}, 
+    setData, 
+    url, 
+    setUrl,
+    center = {lat: -34.397, lng: 150.644},
+    setCenter,
+    status = "idle",
+    setStatus,
+    position = [],
+    setPosition,
+    response = [],
+    setResponse,
+    error = [],
+    setError }) {
 
-export default function LandingPage({ onLoad, onUnmount, containerStyle, center, address, setAddress, maxResults, setMaxResults, minLength, setMinLength, minRating, setMinRating, searchArea, setSearchArea }) {
+let hikingProjectURL = "https://www.hikingproject.com/data/get-trails?"
+let hikingProjectKey = "200793847-c31065fb4a7ef9c4bec2522c771d7f3c"
 
-  const handleSubmit = (e) => { 
+  const handleSubmit = (e) => {
     e.preventDefault(); 
-    console.log(center)
+    resolveData(data);
+    Geocode.fromAddress(address).then(
+        response => {
+          const { lat, lng } = response.results[0].geometry.location;
+          setLat(lat);
+          setLng(lng);
+          getLatLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance)
+        },
+        error => {
+          console.error(error);
+        }
+      );
 
+      setCenter({lat: lat, lng: lng})
+
+      const formatQueryParams = (params) => {
+        var queryItems = Object.keys(params)
+            .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+            return queryItems.join('&');
+      }
+    
+      const getLatLng = (hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance) => {
+          var params = {
+              key: hikingProjectKey,
+              lat: lat,
+              lon: lng,
+              maxDistance: maxDistance,
+              maxResults: maxResults,
+              hikeLength: minLength,
+              hikeRating: minStars
+          };
+          var queryString = formatQueryParams(params);
+          setUrl(hikingProjectURL + queryString);
+    }
+    setData(url);
   }
+
+  useEffect(() => {
+   if (!url) return;
+   const fetchData = async () => {
+        setStatus('fetching');
+        setResponse(await fetch(url)
+          .then(res => res.json())
+          .then(
+            (result) => {
+              setStatus('fetched');
+              setData(result.trails);
+            },
+            (error) => {
+              setStatus('fetched');
+              setError(error);
+            }));
+   };
+   fetchData();
+}, []);
+
+const resolveData = (data) => {
+  data && console.log(data)
+  // data && data.trails.map((data) => <Marker key={data.trails.id} position={data.trails.latitude, data.trails.longitude} />
+  }
+
+//   if (error) {
+//     return <div>Error: {error.message}</div>;
+//   } else if (!isLoaded) {
+//     return <div>Loading...</div>;
+//   } else {
+//     return (
+//       <ul>
+//         {items.map(item => (
+//           <li key={item.id}>
+//             {item.name} {item.price}
+//           </li>
+//         ))}
+//       </ul>
+//     );
+//   }
+// }
 
   return (
         <div>
@@ -21,20 +129,28 @@ export default function LandingPage({ onLoad, onUnmount, containerStyle, center,
       </header>
       <section>
         <header>
-            <h3>Find Hikes near you and make a tick list for each hike.</h3>
+            <h3>Find Hikes near you and make a tick list htmlFor each hike.</h3>
         </header>
         <form id="hike-finder">
-                <div class="form">
-                    <label for="address">Enter a location</label>
+                <div className="form">
+                    <label htmlFor="address">Enter a location</label>
                     <input onChange={e => setAddress(e.target.value)} value={address} type="text" id="address" name="address" placeholder="Appalachian trail" required />
                 </div>
-                <div class="form">
-                    <label for="resultsLimit">Result limit</label>
-                    <input onChange={e => setMaxResults(e.target.value)} value={maxResults} type="number" id="resultsLimit" name="resultsLimit" max="500" />
+                <div className ="form">
+                    <label htmlFor="resultsLimit">Result limit</label>
+                    <select onChange={e => setMaxResults(e.target.value)} value={maxResults} type="number" id="resultsLimit" name="resultsLimit" >
+                        <option value="10">10</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                        <option value="300">300</option>
+                        <option value="400">400</option>
+                        <option value="500">500</option>
+                    </select>
                 </div>
-                <div class="form">
-                    <label for="search-area">Search area</label>
-                    <select onChange={e => setSearchArea(e.target.value)} value={searchArea} id="search-area" name="search-area">
+                <div className="form">
+                    <label htmlFor="search-area">Search area</label>
+                    <select onChange={e => setMaxDistance(e.target.value)} value={maxDistance} id="search-area" name="search-area">
                         <option value="30">30 Miles</option>
                         <option value="50">50 Miles</option>
                         <option value="100">100 Miles</option>
@@ -42,8 +158,8 @@ export default function LandingPage({ onLoad, onUnmount, containerStyle, center,
                         <option value="200">200 Miles</option>
                     </select>
                 </div>
-                <div class="form">
-                    <label for="hike-length">Hike length</label>
+                <div className="form">
+                    <label htmlFor="hike-length">Hike length</label>
                     <select onChange={e => setMinLength(e.target.value)} value={minLength} id="hike-length" name="hike-length">
                         <option value="5">5 Miles</option>
                         <option value="10">10 Miles</option>
@@ -52,9 +168,9 @@ export default function LandingPage({ onLoad, onUnmount, containerStyle, center,
                         <option value="0">No limit</option>
                     </select>
                 </div>
-                <div class="form">
-                    <label for="rating">Hike length</label>
-                    <select onChange={e => setMinRating(e.target.value)} value={minRating} id="rating" name="rating">
+                <div className="form">
+                    <label htmlFor="rating">Hike rating</label>
+                    <select onChange={e => setMinStars(e.target.value)} value={minStars} id="rating" name="rating">
                         <option value="1">1 star</option>
                         <option value="2">2 star</option>
                         <option value="3">3 star</option>
@@ -62,7 +178,7 @@ export default function LandingPage({ onLoad, onUnmount, containerStyle, center,
                         <option value="0">No limit</option>
                     </select>
                 </div>
-                <input type="button" value="search" id="submit" />
+                <input type="button" value="search" id="submit" onClick={handleSubmit}/>
             </form>
           <div className="map">
             <LoadScript
@@ -73,8 +189,8 @@ export default function LandingPage({ onLoad, onUnmount, containerStyle, center,
                 zoom={10}
                 onLoad={onLoad}
                 onUnmount={onUnmount}>
-              { /* Child components, such as markers, info windows, etc. */ }
-              <></>
+                {/* <Marker
+                  position={position} /> */}
             </GoogleMap>
           </LoadScript>
         </div>
@@ -83,21 +199,21 @@ export default function LandingPage({ onLoad, onUnmount, containerStyle, center,
             <header>
                 <h3>Start Now</h3>
             </header>
-            <form class='signup-form'>
+            <form className='signup-form'>
                 <div>
-                <label for="first-name">First name</label>
+                <label htmlFor="first-name">First name</label>
                 <input placeholder='First Name' type="text" name='first-name' id='first-name' />
                 </div>
                 <div>
-                <label for="last-name">Last name</label>
+                <label htmlFor="last-name">Last name</label>
                 <input type="text" name='last-name' id='last-name' placeholder='Last Name' />
                 </div>
                 <div>
-                <label for="username">Email</label>
+                <label htmlFor="username">Email</label>
                 <input type="text" name='username' id='username' />
                 </div>
                 <div>
-                <label for="password">Password</label>
+                <label htmlFor="password">Password</label>
                 <input type="password" name='password' id='password' />
                 </div>
                 <Link to="/find-a-hike"><button type='submit'>Sign Up</button></Link>
