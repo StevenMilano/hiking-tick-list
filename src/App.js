@@ -31,9 +31,12 @@ function App() {
   const [lat, setLat] = React.useState(0);
   const [lng, setLng] = React.useState(0);
   const [url, setUrl] = React.useState("");
-  const [data, setData] = React.useState("");
-  const [center, setCenter] = React.useState({lat: 40.0000, lng: -78.0000 })
-  const [status, setStatus] = useState('idle');
+  const [data, setData] = React.useState({});
+  const [center, setCenter] = React.useState({lat: -34.397, lng: 150.644 })
+  const [status, setStatus] = React.useState('idle');
+  const [position, setPosition] = React.useState([]);
+  const [response, setResponse] = React.useState([]);
+  const [error, setError] = React.useState(null);
 
   const onLoad = React.useCallback(function callback(map) {
     const bounds = new window.google.maps.LatLngBounds();
@@ -53,7 +56,7 @@ function App() {
       <div>
         <Route exact path="/" 
           render={(props) => (
-            <LandingPage {...props} 
+            <LandingPage 
             onUnmount={onUnmount} 
             onLoad={onLoad} 
             center={center}
@@ -79,7 +82,13 @@ function App() {
             center={center}
             setCenter={setCenter} 
             status={status}
-            setStatus={setStatus}/>
+            setStatus={setStatus}
+            position={position}
+            setPosition={setPosition}
+            response={response}
+            setResponse={setResponse}
+            error={error}
+            setError={setError}/>
           )} />
         <Route path="/find-a-hike" render={(props) => (
             <FindAHike {...props} 

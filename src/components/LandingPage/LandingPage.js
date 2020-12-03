@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Element } from 'react-scroll';
-import { GoogleMap, LoadScript } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import Geocode from 'react-geocode';
-import { Marker } from '@react-google-maps/api';
-
 
 export default function LandingPage({ 
     onLoad, 
@@ -24,83 +22,126 @@ export default function LandingPage({
     setLat, 
     lng = 0, 
     setLng, 
-    data = "", 
+    data = {}, 
     setData, 
-    url = "", 
+    url, 
     setUrl,
-    center = {lat: 40.0000, lng: -78.0000},
+    center = {lat: -34.397, lng: 150.644},
     setCenter,
     status = "idle",
-    setStatus }) {
+    setStatus,
+    position = [],
+    setPosition,
+    response = [],
+    setResponse,
+    error = [],
+    setError }) {
 
 let hikingProjectURL = "https://www.hikingproject.com/data/get-trails?"
 let hikingProjectKey = "200793847-c31065fb4a7ef9c4bec2522c771d7f3c"
 
   const handleSubmit = (e) => {
     e.preventDefault(); 
-    resolveData();
+    resolveData(data);
     Geocode.fromAddress(address).then(
         response => {
           const { lat, lng } = response.results[0].geometry.location;
           setLat(lat);
           setLng(lng);
-          getLatLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance)
+          latLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance);
+          setCenter({lat: lat, lng: lng});
+
+          function formatQueryParams(params) {
+            var queryItems = Object.keys(params)
+                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+                return queryItems.join('&');
+          };
+          
+          async function latLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance) {
+            let a = await getLatLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance);
+            return a;
+          };
+
+           function getLatLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance) {
+              var params = {
+                  key: hikingProjectKey,
+                  lat: lat,
+                  lon: lng,
+                  maxDistance: maxDistance,
+                  maxResults: maxResults,
+                  hikeLength: minLength,
+                  hikeRating: minStars
+              };
+              var queryString = formatQueryParams(params);
+              setUrl(hikingProjectURL + queryString);
+              
+              fetch(url)
+                .then(res => res.json())
+                .then(
+                  (data) => {
+                    setStatus('fetched');
+                    setData(data.trails);
+                    console.log(data);
+                  },
+                  (error) => {
+                    setStatus('fetched');
+                    setError(error);
+                  })
+              console.log(url);
+        }
         },
         error => {
           console.error(error);
         }
       );
 
-      setCenter({lat: lat, lng: lng})
+}
 
-      const formatQueryParams = (params) => {
-        var queryItems = Object.keys(params)
-            .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-            return queryItems.join('&');
-      }
-    
-      const getLatLng = (hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance) => {
-          var params = {
-              key: hikingProjectKey,
-              lat: lat,
-              lon: lng,
-              maxDistance: maxDistance,
-              maxResults: maxResults,
-              hikeLength: minLength,
-              hikeRating: minStars
-          };
-          var queryString = formatQueryParams(params);
-           setUrl(hikingProjectURL + queryString);
-          console.log(url);
-    }
-  }
+      // async function fetchData() {
+      //   const response = await fetch(url)
+      //     .then(res => res.json());
+      //     // console.log(url);
+      //     console.log(response);
+      //   // const data = await response.json();
+      //   // console.log(JSON.stringify(data));
+      //   // return response.data;
+      // }
 
-//   const setMarkers = (map, responseJson) => {
-//     for (let j = 0; j < responseJson.routes.length; j++) {
-//       var marker = new google.maps.Marker({
-//         position: { lat: responseJson.routes[j].latitude, lng: responseJson.routes[j].longitude },
-//         map: map,
-//         title: responseJson.routes[j].name
-//       });
-//     }
-//     marker.setMap(map);
-//   };
+      // fetchData().then(data => {
+      //   setData(data);
+        
+      // });
 
+      
+      
+      
   useEffect(() => {
    if (!url) return;
-   const fetchData = async () => {
-        setStatus('fetching');
-        const response = await fetch(url);
-        setData(await response.json());
-        setData(data);
-        setStatus('fetched')
-   };
-   fetchData();
-}, [url])
+    setStatus('fetching');
+            // console.log(data);
+}, []);
 
-const resolveData = async () => {
-    await console.log(data); 
+const resolveData = (data) => {
+  // data && console.log(data)
+  // data && data.trails.map((data) => <Marker key={data.trails.id} position={data.trails.latitude, data.trails.longitude} />
   }
+
+//   if (error) {
+//     return <div>Error: {error.message}</div>;
+//   } else if (!isLoaded) {
+//     return <div>Loading...</div>;
+//   } else {
+//     return (
+//       <ul>
+//         {items.map(item => (
+//           <li key={item.id}>
+//             {item.name} {item.price}
+//           </li>
+//         ))}
+//       </ul>
+//     );
+//   }
+// }
 
   return (
         <div>
@@ -171,10 +212,8 @@ const resolveData = async () => {
                 zoom={10}
                 onLoad={onLoad}
                 onUnmount={onUnmount}>
-              {/* <Marker 
-                onLoad={onLoad}
-                position={position} /> */}
-              <></>
+                {/* <Marker
+                  position={position} /> */}
             </GoogleMap>
           </LoadScript>
         </div>
