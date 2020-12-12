@@ -105,7 +105,7 @@ export default function FindAHike({
             <div className="hike-card" key={data.id}>
               <img className="hike-card-img" src="" alt="" />
               <div className="hike-card-text">
-                  <h3>{data.name}</h3>
+                  <a target='_blank' href={data.url}><h3>{data.name}</h3></a>
                   <p>{data.location}</p>
                   <p>{data.length}</p>
                   <p>accent: {data.accent} decent: {data.decent}</p>
