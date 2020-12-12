@@ -37,6 +37,8 @@ function App() {
   const [position, setPosition] = React.useState([]);
   const [response, setResponse] = React.useState([]);
   const [error, setError] = React.useState(null);
+  const [marker, setMarker] = React.useState(null);
+  const [value, setValue] = React.useState(2);
 
   const onLoad = React.useCallback(function callback(map) {
     const bounds = new window.google.maps.LatLngBounds();
@@ -88,10 +90,14 @@ function App() {
             response={response}
             setResponse={setResponse}
             error={error}
-            setError={setError}/>
+            setError={setError}
+            marker={marker}
+            setMarker={setMarker}
+            value={value}
+            setValue={setValue}/>
           )} />
         <Route path="/find-a-hike" render={(props) => (
-            <FindAHike {...props} 
+            <FindAHike
             onUnmount={onUnmount} 
             onLoad={onLoad} 
             center={center}
@@ -105,7 +111,29 @@ function App() {
             minStars={minStars}
             setMinStars={setMinStars}
             maxDistance={maxDistance}
-            setMaxDistance={setMaxDistance} />
+            setMaxDistance={setMaxDistance}
+            lat={lat}
+            setLat={setLat}
+            lng={lng}
+            setLng={setLng}
+            data={data}
+            setData={setData}
+            url={url}
+            setUrl={setUrl} 
+            center={center}
+            setCenter={setCenter} 
+            status={status}
+            setStatus={setStatus}
+            position={position}
+            setPosition={setPosition}
+            response={response}
+            setResponse={setResponse}
+            error={error}
+            setError={setError}
+            marker={marker}
+            setMarker={setMarker}
+            value={value}
+            setValue={setValue} />
           )} />
         <Route path="/tick-list" component={TickList} />
       </div>

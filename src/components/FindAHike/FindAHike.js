@@ -1,7 +1,143 @@
-import React from 'react'
-import { GoogleMap, LoadScript } from '@react-google-maps/api';
+import React, { useEffect } from 'react';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import Geocode from 'react-geocode';
+import HikeCard from '../HikeCard/HikeCard';
+import Rating from '@material-ui/lab/Rating';
 
-export default function FindAHike({ onLoad, onUnmount, containerStyle, center, address, setAddress, maxResults, setMaxResults, minLength, setMinLength, minRating, setMinRating, searchArea, setSearchArea }) {
+export default function FindAHike({ 
+    onLoad, 
+    onUnmount, 
+    containerStyle, 
+    address = "", 
+    setAddress, 
+    maxResults = 0, 
+    setMaxResults, 
+    minLength = 0, 
+    setMinLength, 
+    minStars = 0, 
+    setMinStars, 
+    maxDistance = 30, 
+    setMaxDistance, 
+    lat = 0, 
+    setLat, 
+    lng = 0, 
+    setLng, 
+    data = {}, 
+    setData, 
+    center = {lat: -34.397, lng: 150.644},
+    setCenter,
+    status = "idle",
+    setStatus,
+    position = [],
+    setPosition,
+    response = [],
+    setResponse,
+    error = [],
+    setError,
+    value = 2,
+    setValue }) {
+        
+        let url = "";
+        let hikingProjectURL = "https://www.hikingproject.com/data/get-trails?";
+        let hikingProjectKey = "200793847-c31065fb4a7ef9c4bec2522c771d7f3c";
+
+        const handleSubmit = (e) => {
+            e.preventDefault(); 
+            Geocode.fromAddress(address).then(
+                response => {
+                  const { lat, lng } = response.results[0].geometry.location;
+                  setLat(lat);
+                  setLng(lng);
+                  latLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance);
+                  setCenter({lat: lat, lng: lng});
+                },
+                error => {
+                  console.error(error);
+                }
+              );
+        }
+        
+        async function latLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance) {
+          await getLatLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance);
+        };
+        
+        function formatQueryParams(params) {
+          var queryItems = Object.keys(params)
+              .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+              return queryItems.join('&');
+        };
+        
+        function getLatLng(hikingProjectKey, lat, lng, maxResults, minLength, minStars, maxDistance) {
+          var params = {
+              key: hikingProjectKey,
+              lat: lat,
+              lon: lng,
+              maxDistance: maxDistance,
+              maxResults: maxResults,
+              hikeLength: minLength,
+              hikeRating: minStars
+          };
+          var queryString = formatQueryParams(params);
+          url = hikingProjectURL + queryString;
+          
+          fetch(url)
+            .then(res => res.json())
+            .then(
+              (data) => {
+                setStatus('fetched');
+                setData(data);
+              },
+              (error) => {
+                setStatus('fetched');
+                setError(error);
+              })
+        }
+        
+        const resolveData = (data) => {
+          if (data && data.trails)  
+            return data && data.trails.map((data) => <Marker key={data.id} position={{lat:data.latitude, lng: data.longitude}} />
+          )}
+        
+        const displayData = (data) => {
+          if (data && data.trails) {
+            // data.trails.map((data) => setValue(data.stars))
+            return data && data.trails.map((data) =>  
+            <div className="hike-card" key={data.id}>
+              <img className="hike-card-img" src="" alt="" />
+              <div className="hike-card-text">
+                  <h3>{data.name}</h3>
+                  <p>{data.location}</p>
+                  <p>{data.length}</p>
+                  <p>accent: {data.accent} decent: {data.decent}</p>
+                  <p>condition status and details: {data.conditionStatus} {data.conditionDetails}</p>
+                  <p className="hike-card-subtext">last updated: {data.conditionDate}</p>
+                  <p>{data.summary}</p>
+                  {/* <div className="rating">
+                      <Rating name="read-only" value={value} readOnly />
+                  </div> */}
+              </div>
+            </div> 
+        )}
+            
+        }
+        
+        //   if (error) {
+        //     return <div>Error: {error.message}</div>;
+        //   } else if (!isLoaded) {
+        //     return <div>Loading...</div>;
+        //   } else {
+        //     return (
+        //       <ul>
+        //         {items.map(item => (
+        //           <li key={item.id}>
+        //             {item.name} {item.price}
+        //           </li>
+        //         ))}
+        //       </ul>
+        //     );
+        //   }
+        // }
+
     return (
         <div>
             <header role="banner">
@@ -12,13 +148,21 @@ export default function FindAHike({ onLoad, onUnmount, containerStyle, center, a
                     <label htmlFor="address">Enter a location</label>
                     <input onChange={e => setAddress(e.target.value)} value={address} type="text" id="address" name="address" placeholder="Appalachian trail" required />
                 </div>
-                <div className="form">
+                <div className ="form">
                     <label htmlFor="resultsLimit">Result limit</label>
-                    <input onChange={e => setMaxResults(e.target.value)} value={maxResults} type="number" id="resultsLimit" name="resultsLimit" max="500" />
+                    <select onChange={e => setMaxResults(e.target.value)} value={maxResults} type="number" id="resultsLimit" name="resultsLimit" >
+                        <option value="10">10</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                        <option value="300">300</option>
+                        <option value="400">400</option>
+                        <option value="500">500</option>
+                    </select>
                 </div>
                 <div className="form">
                     <label htmlFor="search-area">Search area</label>
-                    <select onChange={e => setSearchArea(e.target.value)} value={searchArea} id="search-area" name="search-area">
+                    <select onChange={e => setMaxDistance(e.target.value)} value={maxDistance} id="search-area" name="search-area">
                         <option value="30">30 Miles</option>
                         <option value="50">50 Miles</option>
                         <option value="100">100 Miles</option>
@@ -37,8 +181,8 @@ export default function FindAHike({ onLoad, onUnmount, containerStyle, center, a
                     </select>
                 </div>
                 <div className="form">
-                    <label htmlFor="rating">Hike length</label>
-                    <select onChange={e => setMinRating(e.target.value)} value={minRating} id="rating" name="rating">
+                    <label htmlFor="rating">Hike rating</label>
+                    <select onChange={e => setMinStars(e.target.value)} value={minStars} id="rating" name="rating">
                         <option value="1">1 star</option>
                         <option value="2">2 star</option>
                         <option value="3">3 star</option>
@@ -46,27 +190,26 @@ export default function FindAHike({ onLoad, onUnmount, containerStyle, center, a
                         <option value="0">No limit</option>
                     </select>
                 </div>
-                <input type="button" value="search" id="submit" />
+                <input type="button" value="search" id="submit" onClick={handleSubmit}/>
             </form>
             <p id="js-error-message" className="error-message"></p>
             <div className="map">
-                <LoadScript
-                    googleMapsApiKey="AIzaSyD1OurySFNmim0G5iuXQ-8To7tec6RO0qk">
-                    <GoogleMap
-                        mapContainerStyle={containerStyle}
-                        center={center}
-                        zoom={10}
-                        onLoad={onLoad}
-                        onUnmount={onUnmount}>
-                    { /* Child components, such as markers, info windows, etc. */ }
-                    <></>
-                    </GoogleMap>
-                </LoadScript>
-            </div>
-            <div className="hidden" id="search-results">
-                <ul id="results-list">
-                </ul>
-            </div>
+            <LoadScript
+              googleMapsApiKey="AIzaSyD1OurySFNmim0G5iuXQ-8To7tec6RO0qk">
+                {console.log(center)}
+              <GoogleMap
+                mapContainerStyle={containerStyle}
+                center={center}
+                zoom={10}
+                onLoad={onLoad}
+                onUnmount={onUnmount}>
+                <Marker
+                  position={center} />
+                {resolveData(data)}
+            </GoogleMap>
+          </LoadScript>
+          {displayData(data)}
+        </div>
         </div>
     )
 }

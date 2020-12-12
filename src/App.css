@@ -102,11 +102,17 @@
 
 .hike-card p {
   font-size: 14px;
-  line-height: 8px;
+  line-height: 20px;
+}
+
+.hike-card-subtext {
+  font-size: 10px;
+  color: #444;
 }
 
 .rating {
   margin-top: 10px;
+  margin-bottom: 20px;
 }
 
 .hike-card-text {
@@ -118,7 +124,7 @@
   background-color: white;
   border: 1px solid black;
   border-radius: 5px;
-  height: 190px;
+  height: auto;
   width: auto;
   margin-bottom: 20px;
 }
