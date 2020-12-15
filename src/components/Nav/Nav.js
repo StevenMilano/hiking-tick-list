@@ -6,7 +6,7 @@ const ScrollLink = Scroll.Link
 export default function Nav() {
     return (
         <nav>
-            <Link to="/">Home</Link>
+            <Link to="/hiking-tick-list">Home</Link>
             <ScrollLink
                 to="signup-form" 
                 spy={true} 
@@ -16,8 +16,8 @@ export default function Nav() {
                 activeClass='signup-form-active'>
                 Sign up
             </ScrollLink>
-            <Link to="/find-a-hike">Find a hike</Link>
-            <Link to="/tick-list">Tick List</Link>
+            <Link to="/hiking-tick-list/find-a-hike">Find a hike</Link>
+            <Link to="/hiking-tick-list/tick-list">Tick List</Link>
         </nav>
     );
 }

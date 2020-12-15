@@ -56,7 +56,7 @@ function App() {
       <Nav />
       </header>
       <div>
-        <Route exact path="/" 
+        <Route exact path="/hiking-tick-list" 
           render={(props) => (
             <LandingPage 
             onUnmount={onUnmount} 
@@ -96,7 +96,7 @@ function App() {
             value={value}
             setValue={setValue}/>
           )} />
-        <Route path="/find-a-hike" render={(props) => (
+        <Route path="/hiking-tick-list/find-a-hike" render={(props) => (
             <FindAHike
             onUnmount={onUnmount} 
             onLoad={onLoad} 
@@ -135,7 +135,7 @@ function App() {
             value={value}
             setValue={setValue} />
           )} />
-        <Route path="/tick-list" component={TickList} />
+        <Route path="/hiking-tick-list/tick-list" component={TickList} />
       </div>
       <Footer />
     </div>
